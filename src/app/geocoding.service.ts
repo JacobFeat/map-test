@@ -35,11 +35,15 @@ export interface SelectedLocation {
 
 @Injectable({ providedIn: 'root' })
 export class GeocodingService {
+  /** Publiczny endpoint OSM — aplikacja kliencka, bez własnego proxy. */
+  private static readonly NOMINATIM_REVERSE =
+    'https://nominatim.openstreetmap.org/reverse';
+
   private readonly http = inject(HttpClient);
 
   /**
-   * Odwrotne geokodowanie przez proxy `/api/geocode/reverse` (dev + SSR),
-   * zgodnie z polityką użycia Nominatim.
+   * Odwrotne geokodowanie (Nominatim). Przestrzegaj limitów i zasad:
+   * https://operations.osmfoundation.org/policies/nominatim/
    */
   reverseGeocode(lat: number, lon: number): Observable<SelectedLocation> {
     const params = new HttpParams()
@@ -49,7 +53,9 @@ export class GeocodingService {
       .set('addressdetails', '1');
 
     return this.http
-      .get<NominatimReverseResponse>('/api/geocode/reverse', { params })
+      .get<NominatimReverseResponse>(GeocodingService.NOMINATIM_REVERSE, {
+        params,
+      })
       .pipe(map((res) => this.toLocation(res)));
   }
 

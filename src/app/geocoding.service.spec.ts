@@ -30,7 +30,7 @@ describe('GeocodingService', () => {
 
     const req = httpMock.expectOne(
       (r) =>
-        r.url === '/api/geocode/reverse' &&
+        r.url === 'https://nominatim.openstreetmap.org/reverse' &&
         r.params.get('lat') === '52.23' &&
         r.params.get('lon') === '21.01'
     );
