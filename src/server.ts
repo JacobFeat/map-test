@@ -15,6 +15,36 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
+ * Proxy odwrotnego geokodowania (Nominatim) — ten sam URL co w dev (proxy.conf.json).
+ */
+app.get('/api/geocode/reverse', async (req, res, next) => {
+  try {
+    const url = new URL('https://nominatim.openstreetmap.org/reverse');
+    const lat = req.query['lat'];
+    const lon = req.query['lon'];
+    if (lat == null || lon == null) {
+      res.status(400).json({ error: 'Missing lat or lon' });
+      return;
+    }
+    url.searchParams.set('lat', String(lat));
+    url.searchParams.set('lon', String(lon));
+    url.searchParams.set('format', 'json');
+    url.searchParams.set('addressdetails', '1');
+
+    const upstream = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'sandbox-angular/1.0 (local dev; contact via repo)',
+      },
+    });
+    const body = await upstream.text();
+    res.status(upstream.status).type('application/json').send(body);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * Example Express Rest API endpoints can be defined here.
  * Uncomment and define endpoints as necessary.
  *
